@@ -215,8 +215,9 @@ app.use(function(req, res, next) {
 });
 
 var router = express.Router();
+var routerRoot = express.Router();
 
-router.all('/', function(req, res) {
+routerRoot.all('/', function(req, res) {
     res.json({
         message: 'This is a webapp, so nothing to see here.'
     });
@@ -426,13 +427,13 @@ router.get('/graphinit', function(req, res) {
 });
 
 app.use('/api', router);
-
+app.use('/', routerRoot);
 app.use(function(req, res, next) {
     err.status = 404;
     next(err);
 });
 app.use(function(err, req, res, next) {
-    console.log('Error Handeler -', req.url);
+    console.log('Error Handler -', req.url);
     var errorCode = err.status || 500;
     res.status(errorCode);
     res.json({
