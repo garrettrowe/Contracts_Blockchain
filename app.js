@@ -28,6 +28,9 @@ var GDScreds = null;
 
 var md5 = require('md5');
 
+//Set your graph database title here
+var graph = "graphdbcontracts";
+
 app.use(compression());
 app.use(morgan('dev'));
 app.use(bodyParser.json());
@@ -39,7 +42,7 @@ app.use(cors());
 if (process.env.VCAP_SERVICES) {
     var servicesObject = JSON.parse(process.env.VCAP_SERVICES);
     for (var i in servicesObject) {
-        if (i.indexOf('ibm-blockchain') >= 0) {
+        if (i[0].name.indexOf("ibm-blockchain") >= 0) {
             if (servicesObject[i][0].credentials && servicesObject[i][0].credentials.peers) {
                 console.log('overwritting peers, loading from a vcap service: ', i);
                 peers = servicesObject[i][0].credentials.peers;
@@ -59,7 +62,7 @@ if (process.env.VCAP_SERVICES) {
 }
 
 var graphD = new GDS(GDScreds);
-var graph = "graphdbcontracts";
+
 graphD.session(function(err, data) {
     if (err) {
         console.log(err);
@@ -213,20 +216,24 @@ app.use(function(req, res, next) {
 
 var router = express.Router();
 
-router.get('/', function(req, res) {
+router.all('/', function(req, res) {
     res.json({
-        message: 'This is a webapp'
+        message: 'This is a webapp, so nothing to see here.'
+    });
+});
+
+router.route('/').all(function(req, res) {
+    res.json({
+        message: 'Available commands are create, delete, query, and graphinit'
     });
 });
 
 router.route('/create').post(function(req, res) {
-    chaincode.invoke.init_contract([req.body.name, req.body.startdate, req.body.enddate, req.body.location, req.body.text, req.body.company1, req.body.company2, req.body.title], retCall)
-
+    chaincode.invoke.init_contract([req.body.name, req.body.startdate, req.body.enddate, req.body.location, req.body.text, req.body.company1, req.body.company2, req.body.title], retCall);
+	
     function retCall(e, a) {
         console.log('Blockchain created entry: ', e, a);
     }
-
-
     var gremlinq = {
         gremlin: "\
 	def contractV = graph.addVertex(T.label, 'contract', 'name', contractName, 'hash', hash, 'title', title);\
@@ -260,12 +267,10 @@ router.route('/create').post(function(req, res) {
 });
 
 router.route('/index').post(function(req, res) {
-    chaincode.query.read(['_contractindex'], retCall)
-
-    function retCall(e, a) {
+    chaincode.query.read(['_contractindex'], function(e, a) {
         console.log('Index returns: ', e, a);
         res.json(a);
-    }
+    });
 });
 
 router.route('/delete').post(function(req, res) {
@@ -281,12 +286,10 @@ var gremlinq = {
         }
         console.log(JSON.stringify(data));
     });
-    chaincode.invoke.delete([req.body.name], retCall)
-
-    function retCall(e, a) {
+    chaincode.invoke.delete([req.body.name], function(e, a) {
         console.log('Blockchain returns: ', e, a);
         res.json(a);
-    }
+    });
 });
 
 router.route('/query').post(function(req, res) {
