@@ -115,16 +115,15 @@ var options = {
         //users: prefer_type1_users(users), //dump the whole thing, sdk will parse for a good one
 	    peers:[{
             "discovery_host": "169.48.171.253",
-            "discovery_port": 7051,
+            "discovery_port": 9444,
             "api_host": "169.48.171.253",
-            "api_port": 7050,
+            "api_port": 9445,
             "event_host": "169.48.171.253",
-            "event_port": 7053,
+            "event_port": 9043,
             "type": "peer",
-	    "network_id": "e9c1f08468be49d18a06706c8385a271",
-      	    "container_id": "c992b71cfdc5020888b4806dbd81a10461c3aeaadb689f270bdb753d37e86457",
-            "id": "e9c1f08468be49d18a06706c8385a271-vp0",
-            "api_url": "169.48.171.253:7050"
+	    "network_id": "dev",
+      	    "id": "ibmblockchain",
+            "api_url": "169.48.171.253:9445"
           }],
         options: {
             quiet: true, //detailed debug messages on/off true/false
