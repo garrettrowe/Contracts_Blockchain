@@ -42,6 +42,7 @@ app.use(cors());
 if (process.env.VCAP_SERVICES) {
     var servicesObject = JSON.parse(process.env.VCAP_SERVICES);
     for (var i in servicesObject) {
+	    /*
         if (servicesObject[i][0].name.indexOf("Blockchain") >= 0) {
             if (servicesObject[i][0].credentials && servicesObject[i][0].credentials.peers) {
                 console.log('overwritting peers, loading from a vcap service: ', i);
@@ -52,6 +53,8 @@ if (process.env.VCAP_SERVICES) {
                 } else users = null;
             }
         }
+	*/
+	    
         if (i.indexOf('IBM Graph') >= 0) {
             if (servicesObject[i][0].credentials) {
                 console.log('loading graph from a vcap service: ', i);
@@ -108,11 +111,21 @@ function detect_tls_or_not(peer_array) {
 // ==================================
 var options = {
     network: {
-        peers: [peers[0]], //lets only use the first peer! since we really don't need any more than 1
-        users: prefer_type1_users(users), //dump the whole thing, sdk will parse for a good one
+        //peers: [peers[0]], //lets only use the first peer! since we really don't need any more than 1
+        //users: prefer_type1_users(users), //dump the whole thing, sdk will parse for a good one
+	    peers:[{
+            "discovery_host": "169.48.171.253",
+            "discovery_port": 7051,
+            "api_host": "169.48.171.253",
+            "api_port": 7050,
+            "event_host": "169.48.171.253",
+            "event_port": 7053,
+            "type": "peer",
+            "api_url": "169.48.171.253:7050"
+          }],
         options: {
             quiet: true, //detailed debug messages on/off true/false
-            tls: detect_tls_or_not(peers), //should app to peer communication use tls?
+            tls: false, //detect_tls_or_not(peers), //should app to peer communication use tls?
             maxRetry: 1 //how many times should we retry register before giving up
         }
     },
