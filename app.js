@@ -42,7 +42,7 @@ app.use(cors());
 if (process.env.VCAP_SERVICES) {
     var servicesObject = JSON.parse(process.env.VCAP_SERVICES);
     for (var i in servicesObject) {
-        if (servicesObject[i][0].name.indexOf("ibm-blockchain") >= 0) {
+        if (servicesObject[i][0].name.indexOf("Blockchain") >= 0) {
             if (servicesObject[i][0].credentials && servicesObject[i][0].credentials.peers) {
                 console.log('overwritting peers, loading from a vcap service: ', i);
                 peers = servicesObject[i][0].credentials.peers;
