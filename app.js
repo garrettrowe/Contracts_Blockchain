@@ -121,6 +121,9 @@ var options = {
             "event_host": "169.48.171.253",
             "event_port": 7053,
             "type": "peer",
+	    "network_id": "e9c1f08468be49d18a06706c8385a271",
+      	    "container_id": "c992b71cfdc5020888b4806dbd81a10461c3aeaadb689f270bdb753d37e86457",
+            "id": "e9c1f08468be49d18a06706c8385a271-vp0",
             "api_url": "169.48.171.253:7050"
           }],
         options: {
