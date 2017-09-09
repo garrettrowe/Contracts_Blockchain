@@ -41,9 +41,8 @@ app.use(cors());
 
 if (process.env.VCAP_SERVICES) {
     var servicesObject = JSON.parse(process.env.VCAP_SERVICES);
-    for (var i in servicesObject) {
-	    /*
-        if (servicesObject[i][0].name.indexOf("Blockchain") >= 0) {
+    for (var i in servicesObject) { 
+	if (servicesObject[i][0].name.indexOf("lockchain") >= 0) {
             if (servicesObject[i][0].credentials && servicesObject[i][0].credentials.peers) {
                 console.log('overwritting peers, loading from a vcap service: ', i);
                 peers = servicesObject[i][0].credentials.peers;
@@ -53,8 +52,6 @@ if (process.env.VCAP_SERVICES) {
                 } else users = null;
             }
         }
-	*/
-	    
         if (i.indexOf('IBM Graph') >= 0) {
             if (servicesObject[i][0].credentials) {
                 console.log('loading graph from a vcap service: ', i);
@@ -83,20 +80,6 @@ graphD.graphs().set(graph, function(err, data) {
     console.log("Set active Graph:" + graph);
 });
 
-
-//filter for type1 users if we have any
-function prefer_type1_users(user_array) {
-    var ret = [];
-    for (var i in users) {
-        if (users[i].enrollId.indexOf('type1') >= 0) {
-            ret.push(users[i]);
-        }
-    }
-
-    if (ret.length === 0) ret = user_array;
-    return ret;
-}
-
 //see if peer 0 wants tls or no tls
 function detect_tls_or_not(peer_array) {
     var tls = false;
@@ -111,24 +94,12 @@ function detect_tls_or_not(peer_array) {
 // ==================================
 var options = {
     network: {
-        //peers: [peers[0]], //lets only use the first peer! since we really don't need any more than 1
-        //users: prefer_type1_users(users), //dump the whole thing, sdk will parse for a good one
-	    peers:[{
-            "discovery_host": "169.48.171.253",
-            "discovery_port": 9444,
-            "api_host": "169.48.171.253",
-            "api_port": 9445,
-            "event_host": "169.48.171.253",
-            "event_port": 9043,
-            "type": "peer",
-	    "network_id": "dev",
-      	    "id": "ibmblockchain",
-            "api_url": "169.48.171.253:9445"
-          }],
+        //users: no - we are using an anon blockchain for this
+	peers: [peers[0]],
         options: {
-            quiet: true, //detailed debug messages on/off true/false
-            tls: false, //detect_tls_or_not(peers), //should app to peer communication use tls?
-            maxRetry: 1 //how many times should we retry register before giving up
+            quiet: true,
+            tls: false, 
+            maxRetry: 1 
         }
     },
     chaincode: {
@@ -302,10 +273,15 @@ var gremlinq = {
         }
         console.log(JSON.stringify(data));
     });
-    chaincode.invoke.delete([req.body.name], function(e, a) {
-        console.log('Blockchain returns: ', e, a);
-        res.json(a);
-    });
+    try{
+	    chaincode.invoke.delete([req.body.name], function(e, a) {
+		console.log('Blockchain returns: ', e, a);
+		res.json(a);
+	    });
+    }
+    catch(fail){
+	    console.log('Blockchain out of sync with Graph');
+    }
 });
 
 router.route('/query').post(function(req, res) {
@@ -326,18 +302,23 @@ router.route('/query').post(function(req, res) {
         var contract = null;
         for (var i = 0, len = odata.result.data.length; i < len; i++) {
             contract = odata.result.data[i].properties.name[0].value;
-            console.log('Contract found: ' + contract);
-            chaincode.query.read([contract], function(e, a) {
-                console.log('Blockchain returns: ', e, a);
-                res.write(a);
-                resnum++;
-                if (resnum == odata.result.data.length) {
-		    res.write("]");
-                    res.end();
-                } else {
-                    res.write(",");
-                }
-            });
+            console.log('Contract found in Graph: ' + contract);
+	    try{
+		    chaincode.query.read([contract], function(e, a) {
+			console.log('Blockchain returns: ', e, a);
+			res.write(a);
+			resnum++;
+			if (resnum == odata.result.data.length) {
+			    res.write("]");
+			    res.end();
+			} else {
+			    res.write(",");
+			}
+		    });
+	    }
+	    catch(fail){
+		    console.log('Blockchain out of sync with Graph');
+	    }
         }
     });
 });
